@@ -50,7 +50,7 @@ public class CreateAccountActivity extends AppCompatActivity {
 
         if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
 
-            Toast.makeText(this, "Fields must not be empty.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Fields must not be empty!", Toast.LENGTH_SHORT).show();
 
         } else {
 

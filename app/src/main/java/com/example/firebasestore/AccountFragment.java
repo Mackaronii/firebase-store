@@ -8,28 +8,40 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.EmailAuthCredential;
+import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class AccountFragment extends Fragment {
+
+    private static final String TAG = AccountFragment.class.getSimpleName();
 
     private FragmentActivity mFragmentActivity;
     private FragmentManager mFragmentManager;
 
     private final FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     private TextView mEmailField;
     private EditText mUpdateField;
@@ -92,6 +104,90 @@ public class AccountFragment extends Fragment {
         mEmailField.setText(msg);
     }
 
+    private void displayReauthenticationDialog(final FirebaseUser user, final String function) {
+
+        // Display custom dialog to re-authenticate user.
+        final Dialog dialog = new Dialog(mFragmentActivity);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.reauthentication_dialog_layout);
+
+        final EditText mEmailEditText = dialog.findViewById(R.id.emailEditText);
+        final EditText mPasswordEditText = dialog.findViewById(R.id.passwordEditText);
+        Button mReauthenticateBtn = dialog.findViewById(R.id.reauthenticateBtn);
+
+        mReauthenticateBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                String email = mEmailEditText.getText().toString();
+                String password = mPasswordEditText.getText().toString();
+
+                if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+
+                    Toast.makeText(mFragmentActivity, "Fields must not be empty!", Toast.LENGTH_SHORT).show();
+
+                } else {
+
+                    AuthCredential credential = EmailAuthProvider.getCredential(email, password);
+
+                    // Try to re-authenticate.
+                    user.reauthenticate(credential).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+
+                            if (task.isSuccessful()) {
+
+                                Log.d(TAG, "User re-authenticated!");
+
+                                switch (function) {
+
+                                    case "deleteAccount":
+                                        // Try to delete user account once re-authenticated.
+                                        user.delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+
+                                                if (task.isSuccessful()) {
+
+                                                    Toast.makeText(mFragmentActivity, "Successfully deleted account!", Toast.LENGTH_SHORT).show();
+
+                                                    // Delete the user's shopping cart.
+                                                    db.collection("shoppingCarts").document(user.getUid()).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                        @Override
+                                                        public void onSuccess(Void aVoid) {
+                                                            Log.d(TAG, "User's shopping cart deleted.");
+                                                        }
+                                                    });
+
+                                                    mAuth.signOut();
+                                                    loadSignIn();
+
+                                                } else {
+                                                    Toast.makeText(mFragmentActivity, "Failed to delete account!", Toast.LENGTH_SHORT).show();
+                                                }
+                                            }
+                                        });
+
+                                        break;
+
+                                    default:
+                                        break;
+                                }
+
+                            } else {
+                                Toast.makeText(mFragmentActivity, "Credentials do not match! Failed to re-authenticate!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        dialog.show();
+    }
+
     private void updateEmail() {
 
         String newEmail = mUpdateField.getText().toString().trim();
@@ -121,6 +217,7 @@ public class AccountFragment extends Fragment {
     }
 
     private void displayDeleteDialog() {
+
         new AlertDialog.Builder(mFragmentActivity)
                 .setTitle("Delete Account")
                 .setMessage("Are you sure you want to delete your account?")
@@ -128,15 +225,34 @@ public class AccountFragment extends Fragment {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
 
-                        if (mAuth.getCurrentUser() != null) {
+                        final FirebaseUser user = mAuth.getCurrentUser();
+
+                        if (user != null) {
+
+                            // Try to delete the user's account.
                             mAuth.getCurrentUser().delete().addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
-                                    if (!task.isSuccessful()) {
-                                        Toast.makeText(mFragmentActivity, "Failed to delete user account.", Toast.LENGTH_SHORT).show();
-                                    } else {
+
+                                    if (task.isSuccessful()) {
+
+                                        Toast.makeText(mFragmentActivity, "Successfully deleted account!", Toast.LENGTH_SHORT).show();
+
+                                        // Delete the user's shopping cart.
+                                        db.collection("shoppingCarts").document(user.getUid()).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                            @Override
+                                            public void onSuccess(Void aVoid) {
+                                                Log.d(TAG, "User's shopping cart deleted.");
+                                            }
+                                        });
+
                                         mAuth.signOut();
                                         loadSignIn();
+
+                                    } else {
+
+                                        displayReauthenticationDialog(user, "deleteAccount");
+
                                     }
                                 }
                             });
