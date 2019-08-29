@@ -15,5 +15,6 @@ A mock store currently being developed for Android.
 * Images served by GCS
 * Image galleries
 ## Currently Working On
+* Re-authentication on session time out
 * Filtering and sorting
 * Language and currency locales
