@@ -24,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -111,20 +112,24 @@ public class AccountFragment extends Fragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.reauthentication_dialog_layout);
 
-        final EditText mEmailEditText = dialog.findViewById(R.id.emailEditText);
+        final TextView mEmailTextView = dialog.findViewById(R.id.emailTextView);
         final EditText mPasswordEditText = dialog.findViewById(R.id.passwordEditText);
         Button mReauthenticateBtn = dialog.findViewById(R.id.reauthenticateBtn);
+
+        // Initialize emailTextView.
+        final String email = mAuth.getCurrentUser().getEmail();
+        String msg = "Email: " + email;
+        mEmailTextView.setText(msg);
 
         mReauthenticateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                String email = mEmailEditText.getText().toString();
                 String password = mPasswordEditText.getText().toString();
 
-                if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+                if (TextUtils.isEmpty(password)) {
 
-                    Toast.makeText(mFragmentActivity, "Fields must not be empty!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mFragmentActivity, "Password must not be empty!", Toast.LENGTH_SHORT).show();
 
                 } else {
 
@@ -229,6 +234,9 @@ public class AccountFragment extends Fragment {
 
                         if (user != null) {
 
+                            displayReauthenticationDialog(user,"deleteAccount");
+
+                            /***
                             // Try to delete the user's account.
                             mAuth.getCurrentUser().delete().addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
@@ -239,23 +247,33 @@ public class AccountFragment extends Fragment {
                                         Toast.makeText(mFragmentActivity, "Successfully deleted account!", Toast.LENGTH_SHORT).show();
 
                                         // Delete the user's shopping cart.
-                                        db.collection("shoppingCarts").document(user.getUid()).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                                            @Override
-                                            public void onSuccess(Void aVoid) {
-                                                Log.d(TAG, "User's shopping cart deleted.");
-                                            }
-                                        });
+                                        db.collection("shoppingCarts").document(user.getUid())
+                                                .delete()
+                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                    @Override
+                                                    public void onSuccess(Void aVoid) {
+                                                        Log.d(TAG, "User's shopping cart deleted.");
+                                                    }
+                                                })
+
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+                                                        Log.d(TAG, "Failed to delete user's shopping cart: ", e);
+                                                    }
+                                                });
 
                                         mAuth.signOut();
                                         loadSignIn();
 
                                     } else {
 
-                                        displayReauthenticationDialog(user, "deleteAccount");
+                                        displayReauthenticationDialog(user,"deleteAccount");
 
                                     }
                                 }
                             });
+                             ***/
 
                         } else {
                             Toast.makeText(mFragmentActivity, "You are not currently signed in!", Toast.LENGTH_SHORT).show();

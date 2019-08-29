@@ -10,16 +10,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="Session timed out.\nRe-authentication required."
+        android:text="Session expired.\nRe-authentication required."
         android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
-    <EditText
-        android:id="@+id/emailEditText"
+
+    <TextView
+        android:id="@+id/emailTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="Email"
-        android:inputType="textEmailAddress" />
+        android:layout_marginTop="16dp"
+        android:text="Email"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
     <EditText
         android:id="@+id/passwordEditText"

@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -83,7 +84,12 @@ public class MainActivity extends FragmentActivity {
     }
 
     public void launchShoppingCartActivity(MenuItem item) {
-        Intent intent = new Intent(MainActivity.this, ShoppingCartActivity.class);
-        startActivity(intent);
+
+        if (mAuth.getCurrentUser() != null) {
+            Intent intent = new Intent(MainActivity.this, ShoppingCartActivity.class);
+            startActivity(intent);
+        } else {
+            Toast.makeText(this, "Please sign in to access the shopping cart!", Toast.LENGTH_SHORT).show();
+        }
     }
 }
