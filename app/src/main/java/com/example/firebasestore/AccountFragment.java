@@ -234,9 +234,6 @@ public class AccountFragment extends Fragment {
 
                         if (user != null) {
 
-                            displayReauthenticationDialog(user,"deleteAccount");
-
-                            /***
                             // Try to delete the user's account.
                             mAuth.getCurrentUser().delete().addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
@@ -273,7 +270,6 @@ public class AccountFragment extends Fragment {
                                     }
                                 }
                             });
-                             ***/
 
                         } else {
                             Toast.makeText(mFragmentActivity, "You are not currently signed in!", Toast.LENGTH_SHORT).show();
