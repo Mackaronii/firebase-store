@@ -12,9 +12,10 @@ A mock store currently being developed for Android.
 * User authentication
 * Email validation
 * Inventory management
+* Store filter
 * Images served by GCS
 * Image galleries
 ## Currently Working On
 * Re-authentication on session time out
-* Filtering and sorting
+* Sorting
 * Language and currency locales
