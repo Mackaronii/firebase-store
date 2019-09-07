@@ -68,6 +68,7 @@ public class StoreItemAdapter extends RecyclerView.Adapter<StoreItemAdapter.Stor
             // Load URL image into ImageView.
             Glide.with(mContext)
                     .load(currentItem.getImages().get(0).trim())
+                    .fitCenter()
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .into(mItemImage);
 

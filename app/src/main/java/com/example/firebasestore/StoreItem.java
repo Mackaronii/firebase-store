@@ -12,18 +12,20 @@ public class StoreItem implements Serializable {
     private String name;
     private double price;
     private String description;
+    private String category;
     private int stock;
 
     public StoreItem() {
 
     }
 
-    public StoreItem(ArrayList<String> images, String brand, String name, double price, String description, int stock) {
+    public StoreItem(ArrayList<String> images, String brand, String name, double price, String description, String category, int stock) {
         this.images = images;
         this.brand = brand;
         this.name = name;
         this.price = price;
         this.description = description;
+        this.category = category;
         this.stock = stock;
     }
 
@@ -45,6 +47,10 @@ public class StoreItem implements Serializable {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     public int getStock() {
